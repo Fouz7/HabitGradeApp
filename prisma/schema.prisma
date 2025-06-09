@@ -1,0 +1,56 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  userId     String       @id @default(uuid())
+  username   String       @unique
+  password   String
+  Prediction Prediction[]
+
+  @@map("users")
+}
+
+model Prediction {
+  predictionId String   @id @default(uuid())
+  createdAt    DateTime @default(now())
+
+  // Input features
+  studentName                        String
+  age                                Int
+  gender_code                        Int
+  study_hours_per_day                Float
+  social_media_hours                 Float
+  netflix_hours                      Float
+  part_time_job_code                 Int
+  attendance_percentage              Float
+  sleep_hours                        Float
+  diet_quality_code                  Int
+  exercise_frequency                 Int
+  parental_education_level_code      Int
+  internet_quality_code              Int
+  mental_health_rating               Int
+  extracurricular_participation_code Int
+
+  // Output
+  exam_score          Float
+  generatedSuggestion String @db.Text
+
+  // Relation to User
+  user   User   @relation(fields: [userId], references: [userId])
+  userId String
+
+  @@map("predictions")
+}
