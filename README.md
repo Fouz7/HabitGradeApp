@@ -1,36 +1,23 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# HabitGrade
 
-## Getting Started
+HabitGrade merupakan aplikasi untuk membantu para guru untuk memprediksi performa siswa berdasarkan faktor-faktor kebiasaan atau habit siswa menggunakan deep learning. </br>
+Aplikasi ini dibangun menggunakan framework Next,js.
 
-First, run the development server:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Kamu bisa mencoba aplikasi ini dengan klik link [HabitGrade](https://habit-grade-app.vercel.app/) ini
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Untuk login atau masuk ke aplikasi saat ini tersedia notif saat membuka aplikasi yang berisikan username dan password.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+<img src="/public/login_ss.png" width="500">
+  
+- Pada sisi kanan di navbar terdapat menu **PREDICT NEW DATA** yang bisa digunakan untuk melakukan prediksi performa siswa berdasarkan faktor-faktor habit siswa.
+- Pada prediksi, pastikan kamu mengisi semua field jika sudah submit, kamu akan medapatkan hasil prediksi performa siswa dan mendapatkan saran rekomendasi.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+<img src="/public/predict_ss.png" width="500"> </br>
 
-## Learn More
+<img src="/public/result_ss.png" width="500">
 
-To learn more about Next.js, take a look at the following resources:
+- Kamu juga dapat melihat riwayat prediksi di halaman utama dan dapat melihat detailnya
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+<img src="/public/home_ss.png" width="500"> </br>
+<img src="/public/detail_ss.png" width="500">
