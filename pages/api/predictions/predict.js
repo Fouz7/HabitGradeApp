@@ -1,16 +1,16 @@
-import {GoogleGenerativeAI} from '@google/generative-ai';
-import {PrismaClient} from '@/app/generated/prisma';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { PrismaClient } from '@/app/generated/prisma';
 import http from 'http';
 
 let genAI = null;
 const prisma = new PrismaClient();
 
-const GENDER_MAP = {0: 'Female', 1: 'Male', 2: 'Other'};
-const PART_TIME_JOB_MAP = {0: 'No', 1: 'Yes'};
-const DIET_QUALITY_MAP = {0: 'Fair', 1: 'Good', 2: 'Poor'};
-const PARENTAL_EDUCATION_MAP = {0: 'Bachelor', 1: 'High School', 2: 'Master', 3: 'Unknown'};
-const INTERNET_QUALITY_MAP = {0: 'Average', 1: 'Good', 2: 'Poor'};
-const EXTRACURRICULAR_MAP = {0: 'No', 1: 'Yes'};
+const GENDER_MAP = { 0: 'Female', 1: 'Male', 2: 'Other' };
+const PART_TIME_JOB_MAP = { 0: 'No', 1: 'Yes' };
+const DIET_QUALITY_MAP = { 0: 'Fair', 1: 'Good', 2: 'Poor' };
+const PARENTAL_EDUCATION_MAP = { 0: 'Bachelor', 1: 'High School', 2: 'Master', 3: 'Unknown' };
+const INTERNET_QUALITY_MAP = { 0: 'Average', 1: 'Good', 2: 'Poor' };
+const EXTRACURRICULAR_MAP = { 0: 'No', 1: 'Yes' };
 
 function initializeGemini() {
     if (!genAI) {
@@ -32,7 +32,7 @@ async function predictAndSuggestWithGemini(inputData) {
 
         const prompt = `
             Bertindaklah sebagai konsultan pendidikan dan psikolog siswa yang berpengalaman.
-            Tugas Anda adalah menganalisis profil siswa secara mendalam untuk memprediksi nilai ujian dan memberikan saran perbaikan yang sangat spesifik, personal, dan dapat ditindaklanjuti.
+            Pengguna sistem ini adalah seorang **guru**. Tugas Anda adalah menganalisis profil siswa secara mendalam untuk memprediksi nilai ujian siswa tersebut, dan **memberikan saran spesifik kepada sang guru**. Saran tersebut berisi rekomendasi tentang apa yang bisa dilakukan atau dikomunikasikan oleh guru untuk membantu siswanya berimprovisasi dan meningkatkan kemampuannya.
 
             Profil Siswa:
             - Nama: ${inputData.studentName}
@@ -52,13 +52,13 @@ async function predictAndSuggestWithGemini(inputData) {
 
             Instruksi:
             1. Prediksi Nilai: Perkirakan nilai ujian siswa dalam skala 0-100 (float) berdasarkan faktor-faktor di atas.
-            2. Saran (Suggestion): Berikan saran yang panjang, mendetail, dan informatif.
-               - Identifikasi kekuatan dan kelemahan utama siswa dari data tersebut.
-               - Berikan langkah-langkah konkret untuk meningkatkan nilai akademik.
-               - Sertakan saran terkait kesejahteraan (tidur, mental, fisik) jika ada indikator yang kurang baik.
-               - Berikan tips manajemen waktu jika penggunaan media sosial/Netflix tinggi atau jam belajar rendah.
-               - Gunakan nada yang suportif, memotivasi, namun tegas.
-               - Panjang saran minimal 3-4 kalimat panjang atau poin-poin penjelasan yang berbobot.
+            2. Saran (Suggestion): Berikan saran yang panjang, mendetail, dan ditujukan KEPADA GURU.
+               - Identifikasi kekuatan dan kelemahan utama siswa beserta cara guru dapat meresponsnya.
+               - Berikan langkah-langkah konkret yang bisa dipraktikkan oleh guru untuk membantu meningkatkan nilai akademik siswanya.
+               - Sertakan saran terkait kesejahteraan (tidur, mental, fisik) yang relevan untuk diberikan pengertian/perhatian lebih oleh guru.
+               - Berikan tips pendekatan untuk guru dalam mengarahkan siswa jika penggunaan media hiburannya tinggi atau jam belajarnya rendah.
+               - Gunakan nada yang suportif, profesional, dan memberdayakan guru.
+               - Panjang saran minimal 3-4 kalimat panjang atau beberapa poin penjelasan yang berbobot.
 
             Output HANYA dalam format JSON:
             {
@@ -69,7 +69,7 @@ async function predictAndSuggestWithGemini(inputData) {
 
         const result = await geminiModel.generateContent(prompt);
         const responseText = result.response.text();
-        
+
         const parsed = JSON.parse(responseText);
         return {
             score: parsed.predicted_score,
@@ -115,7 +115,7 @@ export default async function handler(req, res) {
                 });
             }
 
-            const userExists = await prisma.user.findUnique({where: {userId}});
+            const userExists = await prisma.user.findUnique({ where: { userId } });
             if (!userExists) {
                 const code = 404;
                 return res.status(code).json({
@@ -197,7 +197,7 @@ export default async function handler(req, res) {
                 console.error("Penyebab error handler:", err.cause);
             }
 
-            if (err.code === 'P2025') { 
+            if (err.code === 'P2025') {
                 const code = 404;
                 return res.status(code).json({
                     message: "Gagal menyimpan prediksi: User terkait tidak ditemukan.",
