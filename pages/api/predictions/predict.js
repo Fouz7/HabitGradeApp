@@ -1,9 +1,7 @@
-import * as tf from '@tensorflow/tfjs';
 import {GoogleGenerativeAI} from '@google/generative-ai';
 import {PrismaClient} from '@/app/generated/prisma';
-import http from 'http'; // Import http module for status messages
+import http from 'http';
 
-let model = null;
 let genAI = null;
 const prisma = new PrismaClient();
 
@@ -13,38 +11,6 @@ const DIET_QUALITY_MAP = {0: 'Fair', 1: 'Good', 2: 'Poor'};
 const PARENTAL_EDUCATION_MAP = {0: 'Bachelor', 1: 'High School', 2: 'Master', 3: 'Unknown'};
 const INTERNET_QUALITY_MAP = {0: 'Average', 1: 'Good', 2: 'Poor'};
 const EXTRACURRICULAR_MAP = {0: 'No', 1: 'Yes'};
-
-function getBaseUrl() {
-    if (process.env.NEXT_PUBLIC_VERCEL_URL) {
-        return `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`;
-    }
-    if (process.env.VERCEL_URL) {
-        return `https://${process.env.VERCEL_URL}`;
-    }
-    const port = process.env.PORT || 3000;
-    return `http://localhost:${port}`;
-}
-
-const MODEL_FILE_PATH = '/tfjs_model/model.json';
-
-async function loadModel() {
-    if (!model) {
-        const baseUrl = getBaseUrl();
-        const modelUrl = `${baseUrl}${MODEL_FILE_PATH}`;
-        console.log(`Attempting to load model from: ${modelUrl}`);
-        try {
-            model = await tf.loadLayersModel(modelUrl);
-            console.log("Model loaded successfully.");
-        } catch (error) {
-            console.error(`Error loading model from ${modelUrl}:`, error.message);
-            if (error.cause) {
-                console.error("Cause:", error.cause);
-            }
-            throw new Error(`Failed to load TensorFlow model from ${modelUrl}. Original error: ${error.message}`);
-        }
-    }
-    return model;
-}
 
 function initializeGemini() {
     if (!genAI) {
@@ -56,59 +22,58 @@ function initializeGemini() {
     return genAI;
 }
 
-async function generateSuggestionWithGemini(inputData, examScore) {
+async function predictAndSuggestWithGemini(inputData) {
     try {
         const gemini = initializeGemini();
-        const geminiModel = gemini.getGenerativeModel({model: "gemini-1.5-flash"});
+        const geminiModel = gemini.getGenerativeModel({
+            model: "gemini-3-flash-preview",
+            generationConfig: { responseMimeType: "application/json" }
+        });
 
         const prompt = `
-                        Seorang guru sedang melakukan survei terhadap murid-muridnya dan menggunakan aplikasi ini untuk mendapatkan saran.
-                        Nama siswa adalah: ${inputData.studentName}.
-                        Berdasarkan profil siswa berikut, berikan saran yang dapat ditindaklanjuti untuk membantu guru dalam meningkatkan nilai ujian siswa tersebut.
-                        Prediksi nilai ujian siswa adalah: ${examScore.toFixed(2)}.
-                        
-                        Profil Siswa (berdasarkan hasil survei):
-                        - Usia: ${inputData.age}
-                        - Jam Belajar Per Hari: ${inputData.study_hours_per_day}
-                        - Jam Media Sosial Per Hari: ${inputData.social_media_hours}
-                        - Jam Menonton Netflix Per Hari: ${inputData.netflix_hours}
-                        - Memiliki Pekerjaan Paruh Waktu: ${PART_TIME_JOB_MAP[inputData.part_time_job_code]}
-                        - Persentase Kehadiran: ${inputData.attendance_percentage}%
-                        - Jam Tidur Per Hari: ${inputData.sleep_hours}
-                        - Kualitas Diet: ${DIET_QUALITY_MAP[inputData.diet_quality_code]}
-                        - Frekuensi Olahraga (0-7 hari seminggu, di mana 0 tidak ada dan 7 setiap hari): ${inputData.exercise_frequency}
-                        - Tingkat Pendidikan Orang Tua: ${PARENTAL_EDUCATION_MAP[inputData.parental_education_level_code]}
-                        - Kualitas Internet: ${INTERNET_QUALITY_MAP[inputData.internet_quality_code]}
-                        - Peringkat Kesehatan Mental (1-5, di mana 5 terbaik): ${inputData.mental_health_rating}
-                        - Berpartisipasi dalam Kegiatan Ekstrakurikuler: ${EXTRACURRICULAR_MAP[inputData.extracurricular_participation_code]}
-                        
-                        Harap berikan saran yang spesifik, ringkas, dan bermanfaat yang dapat digunakan oleh guru untuk membantu siswa meningkatkan nilai ujiannya. Jangan sertakan jenis kelamin dalam saran Anda.
-                        Fokus pada langkah-langkah yang dapat ditindaklanjuti terkait kebiasaan belajar, manajemen waktu, kesejahteraan, dan pemanfaatan sumber daya yang dapat disampaikan atau difasilitasi oleh guru.
-                        Format saran sebagai paragraf singkat atau beberapa poin.
-                                    `;
+            Bertindaklah sebagai sistem prediksi kinerja siswa yang cerdas.
+            Analisis profil siswa berikut dan lakukan dua hal:
+            1. Prediksi nilai ujian siswa dalam skala 0-100 (float).
+            2. Berikan saran yang dapat ditindaklanjuti untuk membantu siswa meningkatkan nilainya.
+
+            Profil Siswa:
+            - Nama: ${inputData.studentName}
+            - Usia: ${inputData.age}
+            - Jam Belajar Per Hari: ${inputData.study_hours_per_day}
+            - Jam Media Sosial Per Hari: ${inputData.social_media_hours}
+            - Jam Menonton Netflix Per Hari: ${inputData.netflix_hours}
+            - Memiliki Pekerjaan Paruh Waktu: ${PART_TIME_JOB_MAP[inputData.part_time_job_code]}
+            - Persentase Kehadiran: ${inputData.attendance_percentage}%
+            - Jam Tidur Per Hari: ${inputData.sleep_hours}
+            - Kualitas Diet: ${DIET_QUALITY_MAP[inputData.diet_quality_code]}
+            - Frekuensi Olahraga: ${inputData.exercise_frequency} (0-7 hari/minggu)
+            - Tingkat Pendidikan Orang Tua: ${PARENTAL_EDUCATION_MAP[inputData.parental_education_level_code]}
+            - Kualitas Internet: ${INTERNET_QUALITY_MAP[inputData.internet_quality_code]}
+            - Peringkat Kesehatan Mental: ${inputData.mental_health_rating} (1-5)
+            - Kegiatan Ekstrakurikuler: ${EXTRACURRICULAR_MAP[inputData.extracurricular_participation_code]}
+
+            Berikan output HANYA dalam format JSON dengan struktur berikut:
+            {
+                "predicted_score": number,
+                "suggestion": "string"
+            }
+            
+            Pastikan saran bersifat spesifik, ringkas, dan bermanfaat.
+        `;
 
         const result = await geminiModel.generateContent(prompt);
-        const response = await result.response;
-        return response.text();
+        const responseText = result.response.text();
+        
+        const parsed = JSON.parse(responseText);
+        return {
+            score: parsed.predicted_score,
+            suggestion: parsed.suggestion
+        };
+
     } catch (error) {
-        console.error("Error generating suggestion with Gemini:", error);
-        return "Tidak dapat menghasilkan saran saat ini.";
+        console.error("Error generating prediction with Gemini:", error);
+        throw new Error("Gagal menghasilkan prediksi dengan Gemini.");
     }
-}
-
-const INPUT_FEATURE_MEANS = [
-    20.48375, 3.557875, 2.485, 1.82075, 84.256375, 6.464875, 3.06875, 5.4625,
-    0.55625, 0.215, 0.7475, 1.01, 0.75125, 0.3225
-];
-
-const INPUT_FEATURE_STDS = [
-    2.30102932, 1.48399393, 1.16715466, 1.09169338, 9.40908255, 1.2252464,
-    2.01283965, 2.84931461, 0.5782179, 0.41082235, 0.74916203, 0.94069124,
-    0.7066636, 0.46743315
-];
-
-function scaleInputFeatures(inputArray, means, stds) {
-    return inputArray.map((value, index) => (value - means[index]) / stds[index]);
 }
 
 export default async function handler(req, res) {
@@ -155,7 +120,6 @@ export default async function handler(req, res) {
                 });
             }
 
-
             const rawInput = [
                 age, gender_code, study_hours_per_day, social_media_hours,
                 netflix_hours, part_time_job_code, attendance_percentage,
@@ -183,22 +147,7 @@ export default async function handler(req, res) {
                 });
             }
 
-            const scaledInput = scaleInputFeatures(rawInput, INPUT_FEATURE_MEANS, INPUT_FEATURE_STDS);
-
-            const loadedModel = await loadModel();
-            const inputTensor = tf.tensor2d([scaledInput], [1, 14]);
-            const output = loadedModel.predict(inputTensor);
-            let predictionArray = Array.from(output.dataSync());
-            let exam_score = 0;
-
-            if (predictionArray && predictionArray.length > 0) {
-                exam_score = predictionArray[0] - 35;
-            }
-
-            inputTensor.dispose();
-            output.dispose();
-
-            const generatedSuggestion = await generateSuggestionWithGemini(inputData, exam_score);
+            const { score, suggestion } = await predictAndSuggestWithGemini(inputData);
 
             const savedPrediction = await prisma.prediction.create({
                 data: {
@@ -218,8 +167,8 @@ export default async function handler(req, res) {
                     internet_quality_code: parseInt(internet_quality_code),
                     mental_health_rating: parseInt(mental_health_rating),
                     extracurricular_participation_code: parseInt(extracurricular_participation_code),
-                    exam_score: parseFloat(exam_score),
-                    generatedSuggestion: generatedSuggestion,
+                    exam_score: parseFloat(score),
+                    generatedSuggestion: suggestion,
                 }
             });
 
@@ -228,8 +177,8 @@ export default async function handler(req, res) {
                 message: "Prediksi dan saran berhasil dibuat dan disimpan.",
                 data: {
                     ...inputData,
-                    exam_score: exam_score,
-                    generatedSuggestion: generatedSuggestion,
+                    exam_score: score,
+                    generatedSuggestion: suggestion,
                     predictionId: savedPrediction.predictionId
                 },
                 statusCode: code,
@@ -242,7 +191,7 @@ export default async function handler(req, res) {
                 console.error("Penyebab error handler:", err.cause);
             }
 
-            if (err.code === 'P2025') { // Prisma specific error for record not found during relation write
+            if (err.code === 'P2025') { 
                 const code = 404;
                 return res.status(code).json({
                     message: "Gagal menyimpan prediksi: User terkait tidak ditemukan.",
