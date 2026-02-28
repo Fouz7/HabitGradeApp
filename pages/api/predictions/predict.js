@@ -31,34 +31,40 @@ async function predictAndSuggestWithGemini(inputData) {
         });
 
         const prompt = `
-            Bertindaklah sebagai sistem prediksi kinerja siswa yang cerdas.
-            Analisis profil siswa berikut dan lakukan dua hal:
-            1. Prediksi nilai ujian siswa dalam skala 0-100 (float).
-            2. Berikan saran yang dapat ditindaklanjuti untuk membantu siswa meningkatkan nilainya.
+            Bertindaklah sebagai konsultan pendidikan dan psikolog siswa yang berpengalaman.
+            Tugas Anda adalah menganalisis profil siswa secara mendalam untuk memprediksi nilai ujian dan memberikan saran perbaikan yang sangat spesifik, personal, dan dapat ditindaklanjuti.
 
             Profil Siswa:
             - Nama: ${inputData.studentName}
-            - Usia: ${inputData.age}
-            - Jam Belajar Per Hari: ${inputData.study_hours_per_day}
-            - Jam Media Sosial Per Hari: ${inputData.social_media_hours}
-            - Jam Menonton Netflix Per Hari: ${inputData.netflix_hours}
-            - Memiliki Pekerjaan Paruh Waktu: ${PART_TIME_JOB_MAP[inputData.part_time_job_code]}
-            - Persentase Kehadiran: ${inputData.attendance_percentage}%
-            - Jam Tidur Per Hari: ${inputData.sleep_hours}
+            - Usia: ${inputData.age} tahun
+            - Jam Belajar: ${inputData.study_hours_per_day} jam/hari
+            - Penggunaan Media Sosial: ${inputData.social_media_hours} jam/hari
+            - Menonton Netflix: ${inputData.netflix_hours} jam/hari
+            - Pekerjaan Paruh Waktu: ${PART_TIME_JOB_MAP[inputData.part_time_job_code]}
+            - Kehadiran Sekolah: ${inputData.attendance_percentage}%
+            - Tidur: ${inputData.sleep_hours} jam/hari
             - Kualitas Diet: ${DIET_QUALITY_MAP[inputData.diet_quality_code]}
-            - Frekuensi Olahraga: ${inputData.exercise_frequency} (0-7 hari/minggu)
-            - Tingkat Pendidikan Orang Tua: ${PARENTAL_EDUCATION_MAP[inputData.parental_education_level_code]}
+            - Olahraga: ${inputData.exercise_frequency} hari/minggu
+            - Pendidikan Orang Tua: ${PARENTAL_EDUCATION_MAP[inputData.parental_education_level_code]}
             - Kualitas Internet: ${INTERNET_QUALITY_MAP[inputData.internet_quality_code]}
-            - Peringkat Kesehatan Mental: ${inputData.mental_health_rating} (1-5)
-            - Kegiatan Ekstrakurikuler: ${EXTRACURRICULAR_MAP[inputData.extracurricular_participation_code]}
+            - Kesehatan Mental: ${inputData.mental_health_rating} (skala 1-5)
+            - Ekstrakurikuler: ${EXTRACURRICULAR_MAP[inputData.extracurricular_participation_code]}
 
-            Berikan output HANYA dalam format JSON dengan struktur berikut:
+            Instruksi:
+            1. Prediksi Nilai: Perkirakan nilai ujian siswa dalam skala 0-100 (float) berdasarkan faktor-faktor di atas.
+            2. Saran (Suggestion): Berikan saran yang panjang, mendetail, dan informatif.
+               - Identifikasi kekuatan dan kelemahan utama siswa dari data tersebut.
+               - Berikan langkah-langkah konkret untuk meningkatkan nilai akademik.
+               - Sertakan saran terkait kesejahteraan (tidur, mental, fisik) jika ada indikator yang kurang baik.
+               - Berikan tips manajemen waktu jika penggunaan media sosial/Netflix tinggi atau jam belajar rendah.
+               - Gunakan nada yang suportif, memotivasi, namun tegas.
+               - Panjang saran minimal 3-4 kalimat panjang atau poin-poin penjelasan yang berbobot.
+
+            Output HANYA dalam format JSON:
             {
                 "predicted_score": number,
                 "suggestion": "string"
             }
-            
-            Pastikan saran bersifat spesifik, ringkas, dan bermanfaat.
         `;
 
         const result = await geminiModel.generateContent(prompt);
