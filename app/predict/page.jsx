@@ -1,11 +1,11 @@
 'use client';
 
-import React, {useState, useEffect, useCallback} from 'react';
-import {useRouter} from 'next/navigation';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import {
     Container, TextField, Button, Typography, Box, CircularProgress, Alert,
     Paper, AppBar, Toolbar, IconButton, Select, MenuItem, FormControl,
-    InputLabel, Card, CardContent, Collapse, FormHelperText, Grid
+    InputLabel, Card, CardContent, Collapse, FormHelperText, Grid, Snackbar
 } from '@mui/material';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import SendIcon from '@mui/icons-material/Send';
@@ -14,29 +14,29 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 
 const genderOptions = [
-    {value: 0, label: 'Female'},
-    {value: 1, label: 'Male'},
-    {value: 2, label: 'Other'}
+    { value: 0, label: 'Female' },
+    { value: 1, label: 'Male' },
+    { value: 2, label: 'Other' }
 ];
 const booleanOptions = [
-    {value: 0, label: 'No'},
-    {value: 1, label: 'Yes'}
+    { value: 0, label: 'No' },
+    { value: 1, label: 'Yes' }
 ];
 const dietOptions = [
-    {value: 0, label: 'Fair'},
-    {value: 1, label: 'Good'},
-    {value: 2, label: 'Poor'}
+    { value: 0, label: 'Fair' },
+    { value: 1, label: 'Good' },
+    { value: 2, label: 'Poor' }
 ];
 const educationOptions = [
-    {value: 0, label: 'Bachelor'},
-    {value: 1, label: 'High School'},
-    {value: 2, label: 'Master'},
-    {value: 3, label: 'Unknown'}
+    { value: 0, label: 'Bachelor' },
+    { value: 1, label: 'High School' },
+    { value: 2, label: 'Master' },
+    { value: 3, label: 'Unknown' }
 ];
 const internetOptions = [
-    {value: 0, label: 'Average'},
-    {value: 1, label: 'Good'},
-    {value: 2, label: 'Poor'}
+    { value: 0, label: 'Average' },
+    { value: 1, label: 'Good' },
+    { value: 2, label: 'Poor' }
 ];
 
 const initialFormData = {
@@ -59,21 +59,43 @@ const initialFormData = {
 
 const inputStyles = {
     '& .MuiOutlinedInput-root': {
-        '& fieldset': {borderColor: '#606c38'},
-        '&:hover fieldset': {borderColor: '#283618'},
-        '&.Mui-focused fieldset': {borderColor: '#283618'},
+        '& fieldset': { borderColor: '#606c38' },
+        '&:hover fieldset': { borderColor: '#283618' },
+        '&.Mui-focused fieldset': { borderColor: '#283618' },
     },
-    '& label': {color: '#606c38'},
-    '& label.Mui-focused': {color: '#283618'},
+    '& label': { color: '#606c38' },
+    '& label.Mui-focused': { color: '#283618' },
 };
 
 const selectStyles = {
     width: '100%',
     color: '#283618',
-    '.MuiOutlinedInput-notchedOutline': {borderColor: '#606c38'},
-    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {borderColor: '#283618'},
-    '&:hover .MuiOutlinedInput-notchedOutline': {borderColor: '#283618'},
-    '.MuiSvgIcon-root': {color: '#606c38'},
+    '.MuiOutlinedInput-notchedOutline': { borderColor: '#606c38' },
+    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#283618' },
+    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#283618' },
+    '.MuiSvgIcon-root': { color: '#606c38' },
+};
+
+const menuItemStyles = {
+    '&.Mui-selected': {
+        backgroundColor: '#e9edc9 !important',
+        color: '#283618',
+        fontWeight: 'bold',
+    },
+    '&.Mui-selected:hover': {
+        backgroundColor: '#d4d9ba !important',
+    },
+    '&:hover': {
+        backgroundColor: '#e9edc9',
+    }
+};
+
+const dropdownMenuProps = {
+    PaperProps: {
+        sx: {
+            bgcolor: '#f0f3e0',
+        }
+    }
 };
 
 
@@ -103,7 +125,7 @@ export default function PredictPage() {
     }, [router]);
 
     const handleInputChange = (event) => {
-        const {name, value} = event.target;
+        const { name, value } = event.target;
         let processedValue = value;
 
         const numericIntegerFields = [
@@ -122,12 +144,12 @@ export default function PredictPage() {
             else if (name === 'mental_health_rating') processedValue = processedValue ? String(Math.min(Math.max(Number(processedValue), 1), 10)) : '';
         }
 
-        setFormData(prev => ({...prev, [name]: processedValue}));
+        setFormData(prev => ({ ...prev, [name]: processedValue }));
         if (formErrors[name]) {
-            setFormErrors(prev => ({...prev, [name]: ''}));
+            setFormErrors(prev => ({ ...prev, [name]: '' }));
         }
         if (formErrors.totalHours && ['study_hours_per_day', 'social_media_hours', 'netflix_hours', 'sleep_hours'].includes(name)) {
-            setFormErrors(prev => ({...prev, totalHours: ''}));
+            setFormErrors(prev => ({ ...prev, totalHours: '' }));
         }
     };
 
@@ -198,7 +220,7 @@ export default function PredictPage() {
         try {
             const response = await fetch('/api/predictions/predict', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`},
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify(payload),
             });
             const data = await response.json();
@@ -230,6 +252,17 @@ export default function PredictPage() {
         setApiSuccessMessage('');
     };
 
+    const handleCloseSnackbar = (event, reason, type) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+        if (type === 'error') {
+            setError('');
+        } else if (type === 'success') {
+            setApiSuccessMessage('');
+        }
+    };
+
     const handleLogout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('userId');
@@ -243,62 +276,68 @@ export default function PredictPage() {
 
     if (!userId && typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
         return (
-            <Container sx={{display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh'}}>
-                <CircularProgress sx={{color: '#606c38'}}/>
+            <Container sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+                <CircularProgress sx={{ color: '#606c38' }} />
             </Container>
         );
     }
 
     return (
         <>
-            <AppBar position="static" sx={{backgroundColor: '#606c38'}}>
+            <AppBar position="static" sx={{ backgroundColor: '#606c38' }}>
                 <Toolbar>
                     <IconButton
                         edge="start"
                         color="inherit"
                         aria-label="back to home"
                         onClick={handleBack}
-                        sx={{mr: 2}}
+                        sx={{ mr: 2 }}
                     >
-                        <ArrowBackIcon/>
+                        <ArrowBackIcon />
                     </IconButton>
-                    <Typography variant="h6" component="div" sx={{flexGrow: 1}}>
+                    <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
                         Student Exam Score Prediction
                     </Typography>
-                    <Typography variant="subtitle1" sx={{mr: 2}}>
+                    <Typography variant="subtitle1" sx={{ mr: 2 }}>
                         Hi, {username}
                     </Typography>
                     <IconButton color="inherit" onClick={handleLogout} aria-label="logout">
-                        <ExitToAppIcon/>
+                        <ExitToAppIcon />
                     </IconButton>
                 </Toolbar>
             </AppBar>
 
-            <Container sx={{py: 4, backgroundColor: '#fefae0', minHeight: 'calc(100vh - 64px)'}}>
-                <Typography variant="h4" component="h1" gutterBottom
-                            sx={{color: '#283618', textAlign: 'center', mb: 1}}>
-                    Predict New Score
-                </Typography>
-                <Typography variant="subtitle1" sx={{color: '#606c38', textAlign: 'center', mb: 3}}>
-                    Fill in the details below to generate a prediction.
-                </Typography>
+            <Container sx={{ py: 4, backgroundColor: '#fefae0', minHeight: 'calc(100vh - 64px)' }}>
+                <Snackbar
+                    open={!!error}
+                    autoHideDuration={6000}
+                    onClose={(event, reason) => handleCloseSnackbar(event, reason, 'error')}
+                    anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+                >
+                    <Alert onClose={() => setError('')} severity="error" sx={{ width: '100%' }} variant="filled">
+                        {error}
+                    </Alert>
+                </Snackbar>
 
+                <Snackbar
+                    open={!!apiSuccessMessage && !error && showResults}
+                    autoHideDuration={6000}
+                    onClose={(event, reason) => handleCloseSnackbar(event, reason, 'success')}
+                    anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+                >
+                    <Alert onClose={() => setApiSuccessMessage('')} severity="success" sx={{ width: '100%', backgroundColor: '#606c38', color: 'white' }} variant="filled">
+                        {apiSuccessMessage}
+                    </Alert>
+                </Snackbar>
 
-                {error &&
-                    <Alert severity="error" sx={{my: 2, backgroundColor: '#d32f2f', color: 'white'}}>{error}</Alert>}
-                {apiSuccessMessage && !error && showResults && <Alert severity="success" sx={{
-                    my: 2,
-                    backgroundColor: '#2e7d32',
-                    color: 'white'
-                }}>{apiSuccessMessage}</Alert>}
-
-                <Box sx={{position: 'relative', overflowX: 'hidden' /* Prevent horizontal scroll during transition */}}>
+                <Box sx={{ position: 'relative', overflowX: 'hidden' /* Prevent horizontal scroll during transition */ }}>
                     <Collapse in={!showResults} timeout={500} unmountOnExit>
-                        <Paper elevation={3} sx={{p: {xs: 2, md: 3}, backgroundColor: '#e9edc9', borderRadius: '12px'}}>
+                        <Paper elevation={3} sx={{ p: { xs: 2, md: 3 }, backgroundColor: '#e9edc9', borderRadius: '12px' }}>
                             <Box component="form" onSubmit={handleSubmit} noValidate>
                                 <Grid container spacing={2.5}>
                                     <Grid xs={12} width="100%">
                                         <TextField
+                                            size="small"
                                             fullWidth
                                             label="Student Name"
                                             name="studentName"
@@ -310,9 +349,10 @@ export default function PredictPage() {
                                         />
                                     </Grid>
                                     <Grid gap={2}
-                                          sx={{display: 'flex', justifyContent: 'space-between', width: '100%'}}>
+                                        sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
                                         <Grid xs={12} sm={6} width={'100%'}>
                                             <TextField
+                                                size="small"
                                                 fullWidth
                                                 label="Age (1-100)"
                                                 name="age"
@@ -326,7 +366,7 @@ export default function PredictPage() {
                                             />
                                         </Grid>
                                         <Grid xs={12} sm={6} width={'100%'}>
-                                            <FormControl fullWidth error={!!formErrors.gender_code} sx={inputStyles}>
+                                            <FormControl size="small" fullWidth error={!!formErrors.gender_code} sx={inputStyles}>
                                                 <InputLabel>Gender</InputLabel>
                                                 <Select
                                                     name="gender_code"
@@ -335,10 +375,10 @@ export default function PredictPage() {
                                                     label="Gender"
                                                     onChange={handleInputChange}
                                                     sx={selectStyles}
+                                                    MenuProps={dropdownMenuProps}
                                                 >
                                                     {genderOptions.map(opt =>
-                                                        <MenuItem key={opt.value}
-                                                                  value={opt.value}>{opt.label}</MenuItem>
+                                                        <MenuItem key={opt.value} value={opt.value} sx={menuItemStyles}>{opt.label}</MenuItem>
                                                     )}
                                                 </Select>
                                                 {formErrors.gender_code &&
@@ -347,9 +387,10 @@ export default function PredictPage() {
                                         </Grid>
                                     </Grid>
                                     <Grid gap={2}
-                                          sx={{display: 'flex', justifyContent: 'space-between', width: '100%'}}>
+                                        sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
                                         <Grid xs={12} sm={6} width={'100%'}>
                                             <TextField
+                                                size="small"
                                                 fullWidth
                                                 label="Study Hours/Day (0-24)"
                                                 name="study_hours_per_day"
@@ -364,6 +405,7 @@ export default function PredictPage() {
                                         </Grid>
                                         <Grid xs={12} sm={6} width={'100%'}>
                                             <TextField
+                                                size="small"
                                                 fullWidth
                                                 label="Social Media Hours/Day (0-24)"
                                                 name="social_media_hours"
@@ -378,6 +420,7 @@ export default function PredictPage() {
                                         </Grid>
                                         <Grid xs={12} sm={6} width={'100%'}>
                                             <TextField
+                                                size="small"
                                                 fullWidth
                                                 label="Netflix Hours/Day (0-24)"
                                                 name="netflix_hours"
@@ -392,6 +435,7 @@ export default function PredictPage() {
                                         </Grid>
                                         <Grid xs={12} sm={6} width={'100%'}>
                                             <TextField
+                                                size="small"
                                                 fullWidth
                                                 label="Sleep Hours/Day (0-24)"
                                                 name="sleep_hours"
@@ -406,9 +450,10 @@ export default function PredictPage() {
                                         </Grid>
                                     </Grid>
                                     <Grid gap={2}
-                                          sx={{display: 'flex', justifyContent: 'space-between', width: '100%'}}>
+                                        sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
                                         <Grid xs={12} sm={6} width={'100%'}>
                                             <TextField
+                                                size="small"
                                                 fullWidth
                                                 label="Attendance (0-100%)"
                                                 name="attendance_percentage"
@@ -423,6 +468,7 @@ export default function PredictPage() {
                                         </Grid>
                                         <Grid xs={12} sm={6} width={'100%'}>
                                             <TextField
+                                                size="small"
                                                 fullWidth
                                                 label="Exercise (times/week, 0-21)"
                                                 name="exercise_frequency"
@@ -437,6 +483,7 @@ export default function PredictPage() {
                                         </Grid>
                                         <Grid xs={12} sm={6} width={'100%'}>
                                             <TextField
+                                                size="small"
                                                 fullWidth
                                                 label="Mental Health (1-10)"
                                                 name="mental_health_rating"
@@ -450,8 +497,8 @@ export default function PredictPage() {
                                             />
                                         </Grid>
                                         <Grid xs={12} sm={6} width={'100%'}>
-                                            <FormControl fullWidth error={!!formErrors.part_time_job_code}
-                                                         sx={inputStyles}>
+                                            <FormControl size="small" fullWidth error={!!formErrors.part_time_job_code}
+                                                sx={inputStyles}>
                                                 <InputLabel>Part-time Job?</InputLabel>
                                                 <Select
                                                     name="part_time_job_code"
@@ -459,10 +506,10 @@ export default function PredictPage() {
                                                     label="Part-time Job?"
                                                     onChange={handleInputChange}
                                                     sx={selectStyles}
+                                                    MenuProps={dropdownMenuProps}
                                                 >
                                                     {booleanOptions.map(opt =>
-                                                        <MenuItem key={opt.value}
-                                                                  value={opt.value}>{opt.label}</MenuItem>
+                                                        <MenuItem key={opt.value} value={opt.value} sx={menuItemStyles}>{opt.label}</MenuItem>
                                                     )}
                                                 </Select>
                                                 {formErrors.part_time_job_code &&
@@ -472,10 +519,10 @@ export default function PredictPage() {
                                         </Grid>
                                     </Grid>
                                     <Grid gap={2}
-                                          sx={{display: 'flex', justifyContent: 'space-between', width: '100%'}}>
+                                        sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
                                         <Grid xs={12} sm={6} width={'100%'}>
-                                            <FormControl fullWidth error={!!formErrors.diet_quality_code}
-                                                         sx={inputStyles}>
+                                            <FormControl size="small" fullWidth error={!!formErrors.diet_quality_code}
+                                                sx={inputStyles}>
                                                 <InputLabel>Diet Quality</InputLabel>
                                                 <Select
                                                     name="diet_quality_code"
@@ -483,10 +530,10 @@ export default function PredictPage() {
                                                     label="Diet Quality"
                                                     onChange={handleInputChange}
                                                     sx={selectStyles}
+                                                    MenuProps={dropdownMenuProps}
                                                 >
                                                     {dietOptions.map(opt =>
-                                                        <MenuItem key={opt.value}
-                                                                  value={opt.value}>{opt.label}</MenuItem>
+                                                        <MenuItem key={opt.value} value={opt.value} sx={menuItemStyles}>{opt.label}</MenuItem>
                                                     )}
                                                 </Select>
                                                 {formErrors.diet_quality_code &&
@@ -495,8 +542,8 @@ export default function PredictPage() {
                                             </FormControl>
                                         </Grid>
                                         <Grid xs={12} sm={6} width={'100%'}>
-                                            <FormControl fullWidth error={!!formErrors.parental_education_level_code}
-                                                         sx={inputStyles}>
+                                            <FormControl size="small" fullWidth error={!!formErrors.parental_education_level_code}
+                                                sx={inputStyles}>
                                                 <InputLabel>Parental Education</InputLabel>
                                                 <Select
                                                     name="parental_education_level_code"
@@ -504,10 +551,10 @@ export default function PredictPage() {
                                                     label="Parental Education"
                                                     onChange={handleInputChange}
                                                     sx={selectStyles}
+                                                    MenuProps={dropdownMenuProps}
                                                 >
                                                     {educationOptions.map(opt =>
-                                                        <MenuItem key={opt.value}
-                                                                  value={opt.value}>{opt.label}</MenuItem>
+                                                        <MenuItem key={opt.value} value={opt.value} sx={menuItemStyles}>{opt.label}</MenuItem>
                                                     )}
                                                 </Select>
                                                 {formErrors.parental_education_level_code && <FormHelperText
@@ -515,8 +562,8 @@ export default function PredictPage() {
                                             </FormControl>
                                         </Grid>
                                         <Grid xs={12} sm={6} width={'100%'}>
-                                            <FormControl fullWidth error={!!formErrors.internet_quality_code}
-                                                         sx={inputStyles}>
+                                            <FormControl size="small" fullWidth error={!!formErrors.internet_quality_code}
+                                                sx={inputStyles}>
                                                 <InputLabel>Internet Quality</InputLabel>
                                                 <Select
                                                     name="internet_quality_code"
@@ -524,10 +571,10 @@ export default function PredictPage() {
                                                     label="Internet Quality"
                                                     onChange={handleInputChange}
                                                     sx={selectStyles}
+                                                    MenuProps={dropdownMenuProps}
                                                 >
                                                     {internetOptions.map(opt =>
-                                                        <MenuItem key={opt.value}
-                                                                  value={opt.value}>{opt.label}</MenuItem>
+                                                        <MenuItem key={opt.value} value={opt.value} sx={menuItemStyles}>{opt.label}</MenuItem>
                                                     )}
                                                 </Select>
                                                 {formErrors.internet_quality_code && <FormHelperText
@@ -535,9 +582,9 @@ export default function PredictPage() {
                                             </FormControl>
                                         </Grid>
                                         <Grid xs={12} sm={6} width={'100%'}>
-                                            <FormControl fullWidth
-                                                         error={!!formErrors.extracurricular_participation_code}
-                                                         sx={inputStyles}>
+                                            <FormControl size="small" fullWidth
+                                                error={!!formErrors.extracurricular_participation_code}
+                                                sx={inputStyles}>
                                                 <InputLabel>Extracurricular?</InputLabel>
                                                 <Select
                                                     name="extracurricular_participation_code"
@@ -547,8 +594,7 @@ export default function PredictPage() {
                                                     sx={selectStyles}
                                                 >
                                                     {booleanOptions.map(opt =>
-                                                        <MenuItem key={opt.value}
-                                                                  value={opt.value}>{opt.label}</MenuItem>
+                                                        <MenuItem key={opt.value} value={opt.value} sx={menuItemStyles}>{opt.label}</MenuItem>
                                                     )}
                                                 </Select>
                                                 {formErrors.extracurricular_participation_code && <FormHelperText
@@ -559,21 +605,21 @@ export default function PredictPage() {
                                     {formErrors.totalHours && (
                                         <Grid xs={12}>
                                             <Alert severity="warning"
-                                                   sx={{width: '100%', mt: 1}}>{formErrors.totalHours}</Alert>
+                                                sx={{ width: '100%', mt: 1 }}>{formErrors.totalHours}</Alert>
                                         </Grid>
                                     )}
 
                                     <Grid width={'100%'}
-                                          sx={{mt: 2, display: 'flex', alignItems: 'end', justifyContent: 'flex-end'}}>
-                                        <Button type="submit" variant="contained" startIcon={<SendIcon/>} sx={{
+                                        sx={{ mt: 2, display: 'flex', alignItems: 'end', justifyContent: 'flex-end' }}>
+                                        <Button type="submit" variant="contained" startIcon={loading ? null : <SendIcon />} sx={{
                                             backgroundColor: '#606c38',
-                                            '&:hover': {backgroundColor: '#283618'},
+                                            '&:hover': { backgroundColor: '#283618' },
                                             color: 'white',
                                             px: 4,
                                             py: 1.25,
                                             fontSize: '1rem'
                                         }} disabled={loading}>
-                                            {loading ? <CircularProgress size={24} color="inherit"/> : 'Submit'}
+                                            {loading ? <CircularProgress size={24} color="inherit" /> : 'Submit'}
                                         </Button>
                                     </Grid>
                                 </Grid>
@@ -582,60 +628,79 @@ export default function PredictPage() {
                     </Collapse>
 
                     <Collapse in={showResults} timeout={500} mountOnEnter>
-                        <Card elevation={3} sx={{p: {xs: 2, md: 3}, backgroundColor: '#e9edc9', borderRadius: '12px'}}>
-                            <CardContent>
-                                <Typography variant="h5" sx={{color: '#283618', mb: 2, textAlign: 'center'}}>
+                        <Card elevation={3} sx={{ p: { xs: 2, md: 3 }, backgroundColor: '#e9edc9', borderRadius: '12px' }}>
+                            <CardContent sx={{ p: '0 !important', display: 'flex', flexDirection: 'column' }}>
+                                <Typography variant="h5" sx={{ color: '#283618', mb: 3, textAlign: 'left', fontWeight: 'bold' }}>
                                     Prediction Result for {predictionResult?.studentName || formData.studentName}
                                 </Typography>
                                 {predictionResult && (
-                                    <Box>
-                                        <Card sx={{
-                                            backgroundColor: '#f0f3e0',
-                                            borderRadius: '8px',
-                                            p: {xs: 2, sm: 3},
-                                            textAlign: 'center',
-                                            mb: 2.5,
-                                            boxShadow: 2
-                                        }}>
-                                            <Typography variant="h6" sx={{color: '#283618'}}>Predicted Exam
-                                                Score</Typography>
-                                            <Typography variant="h2" component="p"
-                                                        sx={{color: '#606c38', fontWeight: 'bold', my: 1}}>
-                                                {typeof predictionResult.exam_score === 'number' ? predictionResult.exam_score.toFixed(2) : 'N/A'}
-                                            </Typography>
-                                            <Typography variant="caption" sx={{color: '#606c38'}}>Out of
-                                                100</Typography>
-                                        </Card>
-
-                                        <Card sx={{
-                                            backgroundColor: '#f0f3e0',
-                                            borderRadius: '8px',
-                                            p: {xs: 2, sm: 3},
-                                            boxShadow: 2
-                                        }}>
-                                            <Typography variant="h6" sx={{color: '#283618', mb: 1}}>Generated
-                                                Suggestion:</Typography>
-                                            <Typography variant="body1" sx={{
-                                                color: '#606c38',
-                                                whiteSpace: 'pre-wrap',
-                                                maxHeight: '200px',
-                                                overflowY: 'auto'
+                                    <Box sx={{ display: 'flex', gap: 2, alignItems: 'stretch', width: '100%' }}>
+                                        {/* Column 1: Predicted Exam Score */}
+                                        <Box sx={{ flex: 3.5, minWidth: 0 }}>
+                                            <Box sx={{
+                                                backgroundColor: '#f0f3e0',
+                                                borderRadius: '8px',
+                                                p: 2,
+                                                height: '100%',
+                                                display: 'flex',
+                                                flexDirection: 'column',
                                             }}>
-                                                {predictionResult.generatedSuggestion || "No suggestion available."}
-                                            </Typography>
-                                        </Card>
+                                                <Typography variant="h6" sx={{ color: '#283618', mb: 2, textAlign: 'center', fontWeight: '500', borderBottom: '1px solid #ccd5ae', pb: 1 }}>
+                                                    Predicted Exam Score
+                                                </Typography>
+                                                <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                                                    <Typography variant="h2" component="p" sx={{ color: '#606c38', fontWeight: 'bold', mb: 1 }}>
+                                                        {typeof predictionResult.exam_score === 'number' ? predictionResult.exam_score.toFixed(2) : 'N/A'}
+                                                    </Typography>
+                                                    <Typography variant="subtitle1" sx={{ color: '#606c38' }}>
+                                                        Out of 100
+                                                    </Typography>
+                                                </Box>
+                                            </Box>
+                                        </Box>
+
+                                        {/* Column 2: Suggestion */}
+                                        <Box sx={{ flex: 6.5, minWidth: 0 }}>
+                                            <Box sx={{
+                                                backgroundColor: '#f0f3e0',
+                                                borderRadius: '8px',
+                                                p: 2,
+                                                height: '100%',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                            }}>
+                                                <Typography variant="h6" sx={{ color: '#283618', mb: 2, textAlign: 'left', fontWeight: '500', borderBottom: '1px solid #ccd5ae', pb: 1 }}>
+                                                    Suggestion
+                                                </Typography>
+                                                <Box sx={{ position: 'relative', flexGrow: 1, minHeight: '180px' }}>
+                                                    <Box sx={{
+                                                        position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, overflowY: 'auto', pr: 1,
+                                                        '&::-webkit-scrollbar': { width: '6px' },
+                                                        '&::-webkit-scrollbar-track': { background: 'transparent' },
+                                                        '&::-webkit-scrollbar-thumb': { backgroundColor: '#606c38', borderRadius: '4px' },
+                                                        '&::-webkit-scrollbar-button': { display: 'none' },
+                                                        scrollbarWidth: 'thin', scrollbarColor: '#606c38 transparent'
+                                                    }}>
+                                                        <Typography variant="body2" sx={{ color: '#606c38', whiteSpace: 'pre-wrap', lineHeight: 1.6, textAlign: 'justify' }}>
+                                                            {predictionResult.generatedSuggestion || "No suggestion available."}
+                                                        </Typography>
+                                                    </Box>
+                                                </Box>
+                                            </Box>
+                                        </Box>
                                     </Box>
                                 )}
-                                <Box sx={{mt: 3, display: 'flex', justifyContent: 'center'}}>
-                                    <Button variant="outlined" startIcon={<RestartAltIcon/>} onClick={handleResetForm}
-                                            sx={{
-                                                color: '#606c38',
-                                                borderColor: '#606c38',
-                                                '&:hover': {backgroundColor: '#d4d9bA', borderColor: '#283618'},
-                                                px: 3,
-                                                py: 1
-                                            }}>
-                                        Predict for Another Student
+                                <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
+                                    <Button variant="outlined" startIcon={<RestartAltIcon />} onClick={handleResetForm}
+                                        sx={{
+                                            color: '#606c38',
+                                            borderColor: '#606c38',
+                                            '&:hover': { backgroundColor: '#d4d9ba', borderColor: '#283618' },
+                                            px: 3,
+                                            py: 1,
+                                            textTransform: 'none'
+                                        }}>
+                                        Predict for another student
                                     </Button>
                                 </Box>
                             </CardContent>

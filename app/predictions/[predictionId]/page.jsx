@@ -1,13 +1,12 @@
 'use client';
 
-import React, {useEffect, useState, useCallback} from 'react';
-import {useRouter, useParams} from 'next/navigation';
+import React, { useEffect, useState, useCallback } from 'react';
+import { useRouter, useParams } from 'next/navigation';
 import {
     Container,
     Typography,
     CircularProgress,
     Alert,
-    Button,
     Box,
     AppBar,
     Toolbar,
@@ -56,18 +55,18 @@ const mapInternetQuality = (code) => {
     }
 };
 
-// Helper component for displaying detail items
-function DetailItem({label, value}) {
+function DetailItem({ label, value }) {
     return (
         <Box sx={{
             display: 'flex',
             justifyContent: 'space-between',
-            py: 0.75,
+            gap: 3,
+            py: 0.30,
             borderBottom: '1px dashed #ccd5ae',
-            mb: 1.5
+            mb: 0.5
         }}>
-            <Typography variant="subtitle1" sx={{color: '#283618', fontWeight: 'medium'}}>{label}:</Typography>
-            <Typography variant="body1" sx={{color: '#606c38', textAlign: 'right'}}>
+            <Typography variant="body2" sx={{ color: '#283618', fontWeight: 500, fontSize: '0.8rem' }}>{label}:</Typography>
+            <Typography variant="body2" sx={{ color: '#606c38', textAlign: 'right', fontSize: '0.8rem', fontWeight: 600 }}>
                 {value}
             </Typography>
         </Box>
@@ -150,156 +149,172 @@ export default function PredictionDetailPage() {
 
     if (loading) {
         return (
-            <Container sx={{display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh'}}>
-                <CircularProgress sx={{color: '#606c38'}}/>
+            <Container sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+                <CircularProgress sx={{ color: '#606c38' }} />
             </Container>
         );
     }
 
     return (
         <>
-            <AppBar position="static" sx={{backgroundColor: '#606c38'}}>
+            <AppBar position="static" sx={{ backgroundColor: '#606c38' }}>
                 <Toolbar>
                     <IconButton
                         edge="start"
                         color="inherit"
                         aria-label="back to predictions"
                         onClick={handleBack}
-                        sx={{mr: 2}}
+                        sx={{ mr: 2 }}
                     >
-                        <ArrowBackIcon/>
+                        <ArrowBackIcon />
                     </IconButton>
-                    <Typography variant="h6" component="div" sx={{flexGrow: 1}}>
+                    <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
                         Prediction Details
                     </Typography>
-                    <Typography variant="subtitle1" sx={{mr: 2}}>
+                    <Typography variant="subtitle1" sx={{ mr: 2 }}>
                         Hi, {username}
                     </Typography>
                     <IconButton color="inherit" onClick={handleLogout} aria-label="logout">
-                        <ExitToAppIcon/>
+                        <ExitToAppIcon />
                     </IconButton>
                 </Toolbar>
             </AppBar>
 
-            <Container sx={{py: 4, backgroundColor: '#fefae0', minHeight: 'calc(100vh - 64px)'}}>
+            <Container sx={{ py: 4, backgroundColor: '#fefae0', minHeight: 'calc(100vh - 64px)' }}>
                 {error && (
-                    <Alert severity="error" sx={{my: 3, backgroundColor: '#d32f2f', color: 'white'}}>
+                    <Alert severity="error" sx={{ my: 3, backgroundColor: '#d32f2f', color: 'white' }}>
                         {error}
                     </Alert>
                 )}
 
                 {!prediction && !loading && !error && (
-                    <Typography variant="h6" sx={{textAlign: 'center', color: '#606c38', mt: 4}}>
+                    <Typography variant="h6" sx={{ textAlign: 'center', color: '#606c38', mt: 4 }}>
                         Prediction data could not be loaded or found.
                     </Typography>
                 )}
 
                 {prediction && (
-                    <Paper elevation={3} sx={{p: {xs: 2, md: 4}, backgroundColor: '#e9edc9', borderRadius: '12px'}}>
+                    <Paper elevation={3} sx={{ p: { xs: 2, md: 3 }, backgroundColor: '#e9edc9', borderRadius: '12px', display: 'flex', flexDirection: 'column' }}>
                         <Typography variant="h4" component="h1" gutterBottom
-                                    sx={{color: '#283618', textAlign: 'center', mb: 1}}>
+                            sx={{ color: '#283618', textAlign: 'left', mb: 2, fontWeight: 'bold' }}>
                             {prediction.studentName}
                         </Typography>
-                        <Typography variant="caption" display="block"
-                                    sx={{color: '#606c38', textAlign: 'center', mb: 3}}>
-                            Prediction ID: {prediction.predictionId} | Generated
-                            on: {new Date(prediction.createdAt).toLocaleString()}
-                        </Typography>
 
-                        <Divider sx={{my: 3, borderColor: '#ccd5ae'}}/>
-
-                        <Grid container spacing={4}>
-                            <Grid item xs={12} md={5} lg={4}>
-                                <Card sx={{
+                        <Box sx={{ display: 'flex', gap: 2, alignItems: 'stretch', width: '100%' }}>
+                            <Box sx={{ flex: 5.5, minWidth: 0 }}>
+                                <Box sx={{
                                     backgroundColor: '#f0f3e0',
                                     borderRadius: '8px',
-                                    boxShadow: 3,
+                                    p: 2,
                                     height: '100%',
                                     display: 'flex',
                                     flexDirection: 'column',
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
-                                    p: 2,
-                                    minHeight: {md: '250px'}
                                 }}>
-                                    <CardContent sx={{
-                                        textAlign: 'center',
+                                    <Typography variant="h6"
+                                        sx={{ color: '#283618', mb: 1, textAlign: 'center', fontWeight: '500', borderBottom: '1px solid #ccd5ae', pb: 1 }}>
+                                        Influencing Factor
+                                    </Typography>
+                                    <Grid container spacing={3} sx={{ flexGrow: 1, mt: 0, alignContent: 'center', justifyContent: 'center' }}>
+                                        <Grid item xs={6} sx={{ pt: '0 !important' }}>
+                                            <DetailItem label="Age" value={prediction.age} />
+                                            <DetailItem label="Gender" value={mapGender(prediction.gender_code)} />
+                                            <DetailItem label="Study" value={`${prediction.study_hours_per_day}h`} />
+                                            <DetailItem label="Social Media" value={`${prediction.social_media_hours}h`} />
+                                            <DetailItem label="Netflix" value={`${prediction.netflix_hours}h`} />
+                                            <DetailItem label="Parent Edu" value={mapParentalEducation(prediction.parental_education_level_code)} />
+                                            <DetailItem label="Mental Health" value={`${prediction.mental_health_rating}/10`} />
+                                        </Grid>
+                                        <Grid item xs={6} sx={{ pt: '0 !important' }}>
+                                            <DetailItem label="Part-time" value={mapBooleanCode(prediction.part_time_job_code)} />
+                                            <DetailItem label="Attendance" value={`${prediction.attendance_percentage}%`} />
+                                            <DetailItem label="Sleep" value={`${prediction.sleep_hours}h`} />
+                                            <DetailItem label="Diet" value={mapDietQuality(prediction.diet_quality_code)} />
+                                            <DetailItem label="Exercise" value={`${prediction.exercise_frequency}x`} />
+                                            <DetailItem label="Internet" value={mapInternetQuality(prediction.internet_quality_code)} />
+                                            <DetailItem label="Extracurricular" value={mapBooleanCode(prediction.extracurricular_participation_code)} />
+                                        </Grid>
+                                    </Grid>
+                                </Box>
+                            </Box>
+
+                            <Box sx={{ flex: 2.5, minWidth: 0 }}>
+                                <Box sx={{
+                                    backgroundColor: '#f0f3e0',
+                                    borderRadius: '8px',
+                                    p: 2,
+                                    height: '100%',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                }}>
+                                    <Typography variant="h6"
+                                        sx={{ color: '#283618', mb: 2, textAlign: 'center', fontWeight: '500', borderBottom: '1px solid #ccd5ae', pb: 1 }}>
+                                        Predicted Exam Score
+                                    </Typography>
+                                    <Box sx={{
                                         flexGrow: 1,
                                         display: 'flex',
                                         flexDirection: 'column',
-                                        justifyContent: 'center'
+                                        justifyContent: 'center',
+                                        alignItems: 'center'
                                     }}>
-                                        <Typography variant="h6" sx={{color: '#283618', mb: 1}}>
-                                            Predicted Exam Score
-                                        </Typography>
                                         <Typography variant="h2" component="p"
-                                                    sx={{color: '#606c38', fontWeight: 'bold', my: 1}}>
+                                            sx={{ color: '#283618', fontWeight: 'bold', mb: 1 }}>
                                             {prediction.exam_score.toFixed(2)}
                                         </Typography>
-                                        <Typography variant="caption" sx={{color: '#606c38'}}>
+                                        <Typography variant="subtitle1" sx={{ color: '#606c38' }}>
                                             Out of 100
                                         </Typography>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
+                                    </Box>
+                                </Box>
+                            </Box>
 
-                            {/* Factors Section (Now on the right) */}
-                            <Grid item xs={12} md={7} lg={8}>
-                                <Typography variant="h5"
-                                            sx={{color: '#283618', mb: 2.5, borderBottom: '2px solid #ccd5ae', pb: 1}}>
-                                    Influencing Factors
-                                </Typography>
-                                <Grid container spacing={{xs: 2, sm: 3}}>
-                                    <Grid item xs={12} sm={6}>
-                                        <DetailItem label="Age" value={prediction.age}/>
-                                        <DetailItem label="Gender" value={mapGender(prediction.gender_code)}/>
-                                        <DetailItem label="Study Hours/Day"
-                                                    value={`${prediction.study_hours_per_day} hrs`}/>
-                                        <DetailItem label="Social Media/Day"
-                                                    value={`${prediction.social_media_hours} hrs`}/>
-                                        <DetailItem label="Netflix Hours/Day"
-                                                    value={`${prediction.netflix_hours} hrs`}/>
-                                        <DetailItem label="Parental Education"
-                                                    value={mapParentalEducation(prediction.parental_education_level_code)}/>
-                                        <DetailItem label="Mental Health (1-10)"
-                                                    value={`${prediction.mental_health_rating}/10`}/>
-                                    </Grid>
-                                    <Grid item xs={12} sm={6}>
-                                        <DetailItem label="Part-time Job"
-                                                    value={mapBooleanCode(prediction.part_time_job_code)}/>
-                                        <DetailItem label="Attendance" value={`${prediction.attendance_percentage}%`}/>
-                                        <DetailItem label="Sleep Hours" value={`${prediction.sleep_hours} hrs`}/>
-                                        <DetailItem label="Diet Quality"
-                                                    value={mapDietQuality(prediction.diet_quality_code)}/>
-                                        <DetailItem label="Exercise Frequency"
-                                                    value={`${prediction.exercise_frequency} times/wk`}/>
-                                        <DetailItem label="Internet Quality"
-                                                    value={mapInternetQuality(prediction.internet_quality_code)}/>
-                                        <DetailItem label="Extracurricular"
-                                                    value={mapBooleanCode(prediction.extracurricular_participation_code)}/>
-                                    </Grid>
-                                </Grid>
-                            </Grid>
-                        </Grid>
+                            <Box sx={{ flex: 4, minWidth: 0 }}>
+                                <Box sx={{
+                                    backgroundColor: '#f0f3e0',
+                                    borderRadius: '8px',
+                                    p: 2,
+                                    height: '100%',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                }}>
+                                    <Typography variant="h6"
+                                        sx={{ color: '#283618', mb: 2, textAlign: 'left', fontWeight: '500', borderBottom: '1px solid #ccd5ae', pb: 1 }}>
+                                        Suggestion
+                                    </Typography>
+                                    <Box sx={{ position: 'relative', flexGrow: 1, minHeight: '100px' }}>
+                                        <Box sx={{
+                                            position: 'absolute',
+                                            top: 0, bottom: 0, left: 0, right: 0,
+                                            overflowY: 'auto',
+                                            pr: 1,
+                                            '&::-webkit-scrollbar': {
+                                                width: '6px',
+                                            },
+                                            '&::-webkit-scrollbar-track': {
+                                                background: 'transparent',
+                                            },
+                                            '&::-webkit-scrollbar-thumb': {
+                                                backgroundColor: '#606c38',
+                                                borderRadius: '4px',
+                                            },
+                                            '&::-webkit-scrollbar-button': {
+                                                display: 'none',
+                                            },
+                                            scrollbarWidth: 'thin',
+                                            scrollbarColor: '#606c38 transparent'
+                                        }}>
+                                            <Typography variant="body2" sx={{ color: '#606c38', whiteSpace: 'pre-wrap', lineHeight: 1.6, textAlign: 'justify' }}>
+                                                {prediction.generatedSuggestion || "No suggestion available."}
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+                                </Box>
+                            </Box>
+                        </Box>
 
-                        <Divider sx={{my: 3, borderColor: '#ccd5ae'}}/>
-
-                        <Card sx={{mt: 2, backgroundColor: '#f0f3e0', borderRadius: '8px'}}>
-                            <CardContent>
-                                <Typography variant="h6" sx={{color: '#283618', mb: 1}}>
-                                    Generated Suggestion:
-                                </Typography>
-                                <Typography variant="body1" sx={{color: '#606c38', whiteSpace: 'pre-wrap'}}>
-                                    {prediction.generatedSuggestion || "No suggestion available."}
-                                </Typography>
-                            </CardContent>
-                        </Card>
-
-                        {prediction.user && (
-                            <Typography variant="body2" sx={{color: '#606c38', mt: 3, textAlign: 'right'}}>
-                                Prediction requested by: {prediction.user.username} (ID: {prediction.user.userId})
-                            </Typography>
-                        )}
+                        <Typography variant="caption" sx={{ color: '#606c38', mt: 3, pt: 2, borderTop: '1px solid #ccd5ae', textAlign: 'right', display: 'block' }}>
+                            Generated on: {new Date(prediction.createdAt).toLocaleString()} | Prediction requested by: {prediction.user ? prediction.user.username : 'Unknown'}
+                        </Typography>
                     </Paper>
                 )}
             </Container>
